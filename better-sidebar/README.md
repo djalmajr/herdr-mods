@@ -48,6 +48,10 @@ The panel icon at the far right of the tab bar hides or shows the right panel wi
 
 `props.target` names another layout node to toggle; the default is `panel`. The included `keys.json` binds **Cmd+Shift+B** on macOS to `better-sidebar.toggle-panel`; merge it into `~/.config/herdr-app/keys.json`. The command only works while this block is in the layout.
 
+## Pane names (this fork)
+
+An agent row shows its pane's name, when the pane was given one with [Pane Rename](../pane-rename/README.md), in place of its tab's name. Panes without one show the tab's name as before. The name is read from `shared("pane-named.names")`, keyed by terminal.
+
 ## Install
 
 Copy this prompt into your Herdr agent:

@@ -120,10 +120,23 @@ function icon(p, size, color) {
     : image(p.icon).w(size).h(size).flex_none();
 }
 
+// Fork djalmajr/herdr-mods: a name given to the pane with pane-rename (shared
+// "pane-named.names", keyed by terminal) comes before the tab's name, both in the
+// label (agentLabel) and in the row's name (agentName). Without one, nothing changes.
+function paneName(a, all = panes()) {
+  const names = shared("pane-named.names");
+  if (!names || typeof names !== "object") return null;
+  const pane = all.find((p) => p.pane === a.pane);
+  return (pane?.terminal && names[pane.terminal]) || null;
+}
+
 // What a row calls an agent: its tab's title, or failing that its own.
 function agentLabel() {
   const tabs = spaces().flatMap((s) => s.tabs);
+  const all = panes();
   return (a) => {
+    const own = paneName(a, all);
+    if (own) return own;
     const tab = tabs.find((candidate) => candidate.id === a.tab);
     return tab ? title(tab, lead(tab)) : a.title || a.program?.name || "";
   };
@@ -665,7 +678,7 @@ export class Agents {
     const label = view.label(a);
     const namesSpace = !view.nested;
     // A row is its tab's title, as Herdr's tab bar shows it; the icon says which agent.
-    const name = a.tab_name || label;
+    const name = paneName(a) || a.tab_name || label;
     const prog = a.program?.name;
     const idle = a.status === "idle" && !a.focused;
     return h_flex()
