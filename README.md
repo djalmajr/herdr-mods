@@ -6,6 +6,8 @@ Mods for [Herdr Desktop](https://herdr.dev/) built on Herdr's own mod API: a Git
 
 Site: [munza.github.io/herdr-mods](https://munza.github.io/herdr-mods/)
 
+> **This is a fork of [munza/herdr-mods](https://github.com/munza/herdr-mods)** that adds pane names: [Pane Named](pane-named/README.md) (a pane header that shows a pane's own name), [Pane Rename](pane-rename/README.md) (a dialog to name a pane) and, in [Better Sidebar](better-sidebar/README.md), the pane's name in agent rows in place of the tab's. Everything else follows upstream; install prompts that name `munza/herdr-mods` install the upstream mod.
+
 ## Why they're built this way
 
 - **On Herdr, not around it.** Each mod is a separate mod loaded through Herdr's mod API: it reads its block's `props()`, is placed by a layout, and calls Herdr's commands. None patches Herdr's shipped mods, so a Herdr update doesn't overwrite them, and they leave Herdr's own UI alone.

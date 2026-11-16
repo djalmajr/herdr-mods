@@ -29,3 +29,9 @@ licence text ships beside them as LICENSE-material-icon-theme.txt.
 This distribution adds tree/flat file lists, staging controls, reusable diff
 tabs, inline/split views, configurable typography, right-aligned space branches,
 standalone GitHub CLI pull-request status, documentation, and tests.
+
+Pane Named and Pane Rename, and the pane names in Better Sidebar's agent rows,
+were added in the djalmajr/herdr-mods fork. Pane Named adapts Herdr Desktop's
+shipped pane header mod, and its bundled close, split, zoom and spinner SVG icons
+are adapted from Herdr Desktop. Pane Rename is drawn like Herdr Desktop's
+shipped prompt mod.

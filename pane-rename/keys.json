@@ -1,0 +1,6 @@
+{
+  "global": {
+    "alt-r": "mod.open:pane-rename",
+    "f2": "mod.open:pane-rename"
+  }
+}

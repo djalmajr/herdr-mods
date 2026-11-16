@@ -48,11 +48,17 @@ The panel icon at the far right of the tab bar hides or shows the right panel wi
 
 `props.target` names another layout node to toggle; the default is `panel`. The included `keys.json` binds **Cmd+Shift+B** on macOS to `better-sidebar.toggle-panel`; merge it into `~/.config/herdr-app/keys.json`. The command only works while this block is in the layout.
 
+## Pane names (this fork)
+
+An agent row shows its pane's name, when the pane was given one with [Pane Rename](../pane-rename/README.md), in place of its tab's name. Panes without one show the tab's name as before, and grouping by name prefix still reads the tab and space names, so a named pane stays in its tab's group. The name is read from `shared("pane-named.names")`, keyed by terminal.
+
 ## Install
 
 Copy this prompt into your Herdr agent:
 
-> Read ~/.config/herdr-app/AGENTS.md, then add this mod: https://github.com/munza/herdr-mods/tree/main/better-sidebar
+> Read ~/.config/herdr-app/AGENTS.md, then add this mod: https://github.com/djalmajr/herdr-mods/tree/main/better-sidebar
+
+That installs this fork's Better Sidebar, with pane names. The upstream one is at https://github.com/munza/herdr-mods/tree/main/better-sidebar.
 
 Installation follows [RECIPE.md](RECIPE.md). Copy only `mods/better-sidebar/` into the app configuration. The manifest uses `"place": "none"`: the installer should **replace the existing spaces block's mod reference**, not add a second sidebar. Herdr's shipped layouts (`main`, `terminals`, `win98`) are read-only and restored on every start, so the mod only shows in a layout you own. If you are on a shipped layout, your agent clones it and edits the clone; if you already have your own layout, it asks whether to add the mod there or create a new layout. Preserve the agents list, other panels, key bindings, and the existing layout's dimensions. Never overwrite an unrelated mod on a name clash.
 
