@@ -253,21 +253,29 @@ export function shippedMods(installed) {
   return new Set(Object.keys(installed ?? {}).filter((key) => !key.startsWith("layout:")));
 }
 
-// One row per mod folder, the person's own first, then Herdr's, each by title.
+// A mod's name to show: its mod.json title when that's text, else its folder.
+export function modTitle(name, manifest) {
+  const title = manifest?.title;
+  return typeof title === "string" && title.trim() ? title : name;
+}
+
+// One row per mod folder, the person's own first, then Herdr's, each by title. A folder with
+// no mod.json still gets a row, marked missing.
 export function installedRows(entries, shipped) {
-  const rows = entries.map(({ name, manifest }) => ({
+  const rows = entries.map(({ name, manifest, missing = false }) => ({
     name,
-    title: manifest?.title ?? name,
-    version: manifest?.version ?? null,
+    title: modTitle(name, manifest),
+    version: typeof manifest?.version === "string" ? manifest.version : null,
     herdr: shipped.has(name),
+    missing,
   }));
   return rows.sort((a, b) => a.herdr - b.herdr || a.title.localeCompare(b.title));
 }
 
 // The rows on one Installed tab, "yours" or "herdr", whose title or folder holds the search.
 export function filterInstalled(rows, tab, query) {
-  const words = query.trim().toLowerCase();
+  const text = query.trim().toLowerCase();
   return rows.filter(
-    (row) => row.herdr === (tab === "herdr") && `${row.title} ${row.name}`.toLowerCase().includes(words),
+    (row) => row.herdr === (tab === "herdr") && `${row.title} ${row.name}`.toLowerCase().includes(text),
   );
 }

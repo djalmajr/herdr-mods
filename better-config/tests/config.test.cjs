@@ -202,19 +202,32 @@ test("installed mods list yours first, then Herdr's, each by title", async () =>
       { name: "agents", manifest: { title: "Agents" } },
       { name: "broken", manifest: null },
       { name: "lantern-alerts", manifest: { title: "Lantern Alerts", version: "1.0.0" } },
+      { name: "odd-title", manifest: { title: 3, version: 2 } },
+      { name: "half-copied", manifest: null, missing: true },
     ],
     new Set(["toast", "agents"]),
   );
   assert.deepEqual(
-    rows.map((r) => [r.name, r.title, r.version, r.herdr]),
+    rows.map((r) => [r.name, r.title, r.version, r.herdr, r.missing]),
     [
-      ["broken", "broken", null, false],
-      ["lantern-alerts", "Lantern Alerts", "1.0.0", false],
-      ["lantern-tabs", "Lantern Tabs", "2.0.0", false],
-      ["agents", "Agents", null, true],
-      ["toast", "toast", null, true],
+      ["broken", "broken", null, false, false],
+      ["half-copied", "half-copied", null, false, true],
+      ["lantern-alerts", "Lantern Alerts", "1.0.0", false, false],
+      ["lantern-tabs", "Lantern Tabs", "2.0.0", false, false],
+      ["odd-title", "odd-title", null, false, false],
+      ["agents", "Agents", null, true, false],
+      ["toast", "toast", null, true, false],
     ],
   );
+});
+
+test("a mod's title is its mod.json title when that's text, else its folder", async () => {
+  const { modTitle } = await load();
+  assert.equal(modTitle("lantern-tabs", { title: "Lantern Tabs" }), "Lantern Tabs");
+  assert.equal(modTitle("lantern-tabs", { title: 3 }), "lantern-tabs");
+  assert.equal(modTitle("lantern-tabs", { title: { en: "Lantern Tabs" } }), "lantern-tabs");
+  assert.equal(modTitle("lantern-tabs", { title: "  " }), "lantern-tabs");
+  assert.equal(modTitle("lantern-tabs", null), "lantern-tabs");
 });
 
 test("the Installed tabs and search: yours or Herdr's, matching the title or folder, case aside", async () => {

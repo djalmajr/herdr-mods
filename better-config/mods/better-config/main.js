@@ -18,6 +18,7 @@ import {
   lostValues,
   editManifest,
   equal,
+  modTitle,
   modUse,
   shippedMods,
   installedRows,
@@ -76,7 +77,10 @@ export default class BetterConfig extends View {
     for (const name of names) {
       const path = `${appHome()}/mods/${name}/mod.json`;
       const raw = await readTextFile(path);
-      if (raw === null) continue;
+      if (raw === null) {
+        entries.push({ name, manifest: null, missing: true });
+        continue;
+      }
       let manifest = null;
       let error = null;
       try {
@@ -109,15 +113,17 @@ export default class BetterConfig extends View {
     mods.sort((a, b) => this.titleOf(a).localeCompare(this.titleOf(b)));
     const installed = installedRows(entries, shippedMods(await this.readJson(`${appHome()}/installed.json`)));
     const keys = await this.readJson(`${appHome()}/keys.json`);
-    const shape = (list, rows, k) => JSON.stringify([list.map((m) => [m.name, m.raw, m.keptRaw]), rows, k]);
-    const before = shape(this.mods, this.installed, this.keys);
+    const shown = layout();
+    const shape = (list, rows, k, l) => JSON.stringify([list.map((m) => [m.name, m.raw, m.keptRaw]), rows, k, l]);
+    const before = shape(this.mods, this.installed, this.keys, this.layout);
     this.mods = mods;
     this.installed = installed;
     this.keys = keys;
+    this.layout = shown;
     this.loaded = true;
     if (this.section !== INSTALLED && !mods.some((m) => m.name === this.section)) this.section = mods[0]?.name ?? INSTALLED;
     this.makeInputs();
-    return before !== shape(mods, installed, keys);
+    return before !== shape(mods, installed, keys, shown);
   }
 
   // A JSON file, or null when it's missing or unreadable.
@@ -130,7 +136,7 @@ export default class BetterConfig extends View {
   }
 
   titleOf(mod) {
-    return mod.manifest?.title ?? mod.name;
+    return modTitle(mod.name, mod.manifest);
   }
 
   // Writes the copy of this mod's changed values, when it differs.
@@ -632,7 +638,13 @@ export default class BetterConfig extends View {
                   .min_w(0)
                   .gap(2)
                   .child(div().text_size(14).text_color(t.foreground).truncate().child(row.title))
-                  .child(div().text_size(11.5).text_color(t.dim).font_family("JetBrains Mono").child(row.name)),
+                  .child(
+                    div()
+                      .text_size(11.5)
+                      .text_color(t.dim)
+                      .font_family("JetBrains Mono")
+                      .child(row.missing ? `${row.name} · no mod.json` : row.name),
+                  ),
               )
               .child(div().flex_none().w(60).text_size(12.5).text_color(t.dim).child(row.version ?? ""))
               .child(
@@ -653,6 +665,7 @@ export default class BetterConfig extends View {
                     el.child(
                       this.button(t, `bc-installed-settings-${row.name}`, "Settings", (cx) => {
                         this.section = row.name;
+                        this.handle.focus();
                         cx.notify();
                       }),
                     ),
@@ -725,16 +738,6 @@ export default class BetterConfig extends View {
 
   page(t, mod) {
     if (this.section === INSTALLED) return this.installedPage(t);
-    if (!mod)
-      return v_flex()
-        .gap(6)
-        .child(div().text_size(18).font_semibold().text_color(t.foreground).child("No mod settings"))
-        .child(
-          div()
-            .text_size(13)
-            .text_color(t.dim)
-            .child("None of your installed mods has a settings block in its mod.json yet."),
-        );
     const fields = mod.manifest ? mod.fields : [];
     const changed = fields.filter((f) => isChanged(f, getPath(mod.manifest.settings, f.key)));
     // Grouped by the first part of the key; one-part keys go first, with no heading.
