@@ -84,10 +84,14 @@ test("on hover, the pencil opens the rename dialog for this pane's terminal", ()
   assert.equal(pencil.nodes[0].file, "mods/pane-named/rename.svg", "its icons are its own");
 });
 
-test("a double-click on the name opens the dialog; a single click focuses the pane", () => {
+test("a double-click on the name opens the dialog; a single click is left to the header", () => {
   const { live, mod } = harness({ pane: agentPane });
-  const name = find(mod.render(cx), "pane-name-p1");
+  const tree = mod.render(cx);
+  const name = find(tree, "pane-name-p1");
   name.handlers.on_click({ click_count: 1 }, cx);
+  assert.deepEqual(plain(live.commands), [], "the name doesn't focus too, or the pane would be focused twice");
+  assert.equal(live.overlays.length, 0);
+  find(tree, "pane-head-p1").handlers.on_click({ click_count: 1 }, cx);
   assert.deepEqual(plain(live.commands), [{ name: "pane.focus", args: { pane: "p1" } }]);
   name.handlers.on_click({ click_count: 2 }, cx);
   assert.equal(live.overlays[0].props.terminal, "t1");

@@ -121,22 +121,20 @@ function icon(p, size, color) {
 }
 
 // Fork djalmajr/herdr-mods: a name given to the pane with pane-rename (shared
-// "pane-named.names", keyed by terminal) comes before the tab's name, both in the
-// label (agentLabel) and in the row's name (agentName). Without one, nothing changes.
-function paneName(a, all = panes()) {
+// "pane-named.names", keyed by terminal) is what the row shows (agentName), in
+// place of the tab's name. Grouping still reads the tab and space names, so a
+// named pane stays in its tab's group. Without a name, nothing changes.
+function paneName(a) {
   const names = shared("pane-named.names");
   if (!names || typeof names !== "object") return null;
-  const pane = all.find((p) => p.pane === a.pane);
+  const pane = panes().find((p) => p.pane === a.pane);
   return (pane?.terminal && names[pane.terminal]) || null;
 }
 
 // What a row calls an agent: its tab's title, or failing that its own.
 function agentLabel() {
   const tabs = spaces().flatMap((s) => s.tabs);
-  const all = panes();
   return (a) => {
-    const own = paneName(a, all);
-    if (own) return own;
     const tab = tabs.find((candidate) => candidate.id === a.tab);
     return tab ? title(tab, lead(tab)) : a.title || a.program?.name || "";
   };

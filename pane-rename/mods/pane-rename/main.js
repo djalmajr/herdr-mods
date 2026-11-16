@@ -7,13 +7,23 @@
 
 import { View, div } from "gpui-kit";
 import { v_flex, h_flex, InputState, Input } from "gpui-base";
-import { props, focused, closeOverlay, theme, shared, setShared } from "herdr";
+import { props, focused, terminals, closeOverlay, theme, shared, setShared } from "herdr";
 
 const NAMES = "pane-named.names";
 
 function names() {
   const value = shared(NAMES);
   return value && typeof value === "object" ? value : {};
+}
+
+// Drops the names of terminals that ended, as Better Sidebar's pins do: a name is
+// kept while its terminal is live, or while its machine hasn't been heard from.
+function pruned(saved) {
+  const all = terminals();
+  const machine = (address) => (address.includes("/") ? address.split("/")[0] : "");
+  const heard = new Set(all.map((t) => machine(t.address)));
+  const live = new Set(all.filter((t) => t.state === "live").map((t) => t.address));
+  return Object.fromEntries(Object.entries(saved).filter(([address]) => !heard.has(machine(address)) || live.has(address)));
 }
 
 export default class PaneRename extends View {
@@ -38,7 +48,7 @@ export default class PaneRename extends View {
 
   submit() {
     if (this.terminal) {
-      const next = { ...names() };
+      const next = pruned(names());
       const name = this.text.trim();
       if (name) next[this.terminal] = name;
       else delete next[this.terminal];

@@ -22,8 +22,8 @@ function element() {
   return proxy;
 }
 
-function harness({ props = {}, focused = null, shared = {} } = {}) {
-  const live = { props, focused, shared, closed: [] };
+function harness({ props = {}, focused = null, shared = {}, terminals = [] } = {}) {
+  const live = { props, focused, shared, terminals, closed: [] };
   const input = { value: "", handlers: {}, selected: null };
   const context = {
     View: class {},
@@ -44,6 +44,7 @@ function harness({ props = {}, focused = null, shared = {} } = {}) {
     },
     props: () => live.props,
     focused: () => live.focused,
+    terminals: () => live.terminals,
     closeOverlay: (id) => live.closed.push(id),
     theme: () => new Proxy({}, { get: (_t, k) => String(k) }),
     shared: (key) => live.shared[key],
@@ -90,6 +91,7 @@ test("it starts with the current name selected, and an empty name removes only t
   const { live, input, type } = harness({
     props: { overlay: "o1", terminal: "t1" },
     shared: { "pane-named.names": { t1: "Old", t3: "Other" } },
+    terminals: [{ address: "t1", state: "live" }, { address: "t3", state: "live" }],
   });
   assert.equal(input.value, "Old");
   assert.deepEqual(plain(input.selected), { start: 0, end: 3 });
@@ -119,4 +121,15 @@ test("it reads like Herdr's own prompt", () => {
   const { mod } = harness({ props: { overlay: "o1" }, focused: { terminal: "t1" } });
   const text = strings(mod.render());
   for (const word of ["Rename pane", "Name", "empty: its title", "Cancel", "Save"]) assert.match(text, new RegExp(word));
+});
+
+test("saving drops names of terminals that ended, but keeps those of machines not heard from", () => {
+  const { live, input, type } = harness({
+    props: { overlay: "o1", terminal: "t1" },
+    shared: { "pane-named.names": { t2: "Ended", "mac/t9": "Remote" } },
+    terminals: [{ address: "t1", state: "live" }, { address: "t2", state: "exited" }],
+  });
+  type("Tweaks");
+  input.handlers.submit();
+  assert.deepEqual(plain(live.shared["pane-named.names"]), { "mac/t9": "Remote", t1: "Tweaks" });
 });

@@ -99,9 +99,9 @@ export default class PaneNamed extends View {
       .child(div()
         .id(`pane-name-${pane}`)
         .flex_none().truncate().max_w(260).font_medium().text_color(t.foreground)
+        // A single click goes on to the header, which focuses the pane.
         .when(Boolean(p.terminal), el => el.on_click((e, cx) => {
           if (e.click_count >= 2) { cx.stop_propagation(); openRename(p.terminal); }
-          else run("pane.focus", { pane });
         }))
         .child(name))
       .child(div().flex_1().truncate().text_color(t.dim).child(folder(p.cwd)))

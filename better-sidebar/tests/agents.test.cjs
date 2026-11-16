@@ -297,3 +297,32 @@ test("a pane named by pane-named shows its name instead of the tab's, and only t
   delete h.live.shared["pane-named.names"];
   assert.match(strings(find(mod.render(cx), "ag-t1")), /Work/, "with no names saved, the tab's name again");
 });
+
+test("a named pane stays in its tab's prefix group", () => {
+  const { h, mod } = agents("prefix");
+  const before = rows(mod.render(cx));
+  h.live.panes = [{ pane: "p-t6", terminal: "term-6", tab: "f" }];
+  h.live.shared["pane-named.names"] = { "term-6": "Logs" };
+  const tree = mod.render(cx);
+  assert.deepEqual(rows(tree), before, "t6 stays under INS, its tab's prefix");
+  assert.match(strings(find(tree, "ag-t6")), /Logs/);
+});
+
+test("with no tab name, a named pane shows its name, and an unnamed one its label", () => {
+  const { h, mod } = agents("grouped");
+  h.live.panes = [{ pane: "p-t6", terminal: "term-6", tab: "f" }];
+  h.live.shared["pane-named.names"] = { "term-6": "Logs" };
+  const tree = mod.render(cx);
+  assert.match(strings(find(tree, "ag-t6")), /Logs/);
+  assert.match(strings(find(tree, "ag-t1")), /Work/, "the tab's title, as before");
+});
+
+test("a saved name whose pane isn't there changes no row", () => {
+  const { h, mod } = agents("grouped");
+  for (const a of h.live.agents) a.tab_name = "Work";
+  h.live.panes = [{ pane: "p-t1", terminal: "term-1", tab: "a" }];
+  h.live.shared["pane-named.names"] = { "term-gone": "Old" };
+  const tree = mod.render(cx);
+  assert.doesNotMatch(strings(tree), /Old/);
+  assert.match(strings(find(tree, "ag-t1")), /Work/);
+});
