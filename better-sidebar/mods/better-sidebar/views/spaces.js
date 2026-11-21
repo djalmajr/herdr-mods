@@ -7,6 +7,8 @@ import {
   machines,
   panes,
   run,
+  exec,
+  home,
   openOverlay,
   hc,
   theme,
@@ -400,9 +402,31 @@ export class Spaces {
       .text_size(TEXT.small)
       .text_color(t.dim)
       .hover((s) => s.bg(t.hover).text_color(t.foreground))
-      .on_click(() => run("space.new", { machine: m ?? "" }))
+      .on_click(() => this.newSpaceOn(m))
       .child(Icon("plus", 12))
       .when(!collapsed, (el) => el.child("New space there"));
+  }
+
+  // A machine's own +: a space there, in its home. "" names this computer (left out,
+  // Herdr uses the focused space's machine), and a folder left out is the focused
+  // space's folder, so the home is asked for: "~" and "" aren't it on every machine.
+  async newSpaceOn(m) {
+    const folder = m ? await this.machineHome(m) : home();
+    run("space.new", { machine: m ?? "", ...(folder ? { folder } : {}) });
+  }
+
+  async machineHome(m) {
+    this.homes ??= {};
+    if (!this.homes[m]) {
+      try {
+        // exec starts in that machine's home.
+        const r = await exec("pwd", [], { on: m, timeout: 5000 });
+        if (r.code === 0) this.homes[m] = r.stdout.trim();
+      } catch {
+        // Unreachable: the space still opens there, in Herdr's folder.
+      }
+    }
+    return this.homes[m] ?? "";
   }
 
   machineHeader(m, t, collapsed) {
@@ -460,7 +484,7 @@ export class Spaces {
       .hover((s) => s.bg(t.hover).text_color(t.foreground))
       .on_click((_e, cx) => {
         cx.stop_propagation();
-        run("space.new", { machine: m ?? "" });
+        this.newSpaceOn(m);
       })
       .child("+");
   }

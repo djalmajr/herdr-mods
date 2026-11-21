@@ -615,16 +615,28 @@ test("spaces publish each space's main space for the agents block", () => {
   assert.equal(parents.plain, undefined, "not a repository");
 });
 
-test("a machine's + opens the space on that machine, whichever space is focused", () => {
+test("a machine's + opens the space on that machine, in its home, whichever space is focused", async () => {
   const h = harness();
   const stop = { stop_propagation() {} };
+  h.context.home = () => "/home/me";
+  h.context.exec = async (cmd, args, options) => {
+    h.calls.push({ cmd, args, options });
+    if (options.on === "gone") throw Error("unreachable");
+    return { code: 0, stdout: "/Users/me\n" };
+  };
   h.mod.machineAddButton(null, h.colors).handlers.click(stop, h.cx);
-  h.mod.machineAddButton("macos", h.colors).handlers.click(stop, h.cx);
   h.mod.newSpaceRow(null, h.colors, false).handlers.click(stop, h.cx);
+  await h.mod.newSpaceOn("macos");
+  await h.mod.newSpaceOn("macos");
+  await h.mod.newSpaceOn("gone");
   // "" names this computer; without it Herdr uses the focused space's machine.
   assert.deepEqual(JSON.parse(JSON.stringify(h.commands)), [
-    { name: "space.new", args: { machine: "" } },
-    { name: "space.new", args: { machine: "macos" } },
-    { name: "space.new", args: { machine: "" } },
+    { name: "space.new", args: { machine: "", folder: "/home/me" } },
+    { name: "space.new", args: { machine: "", folder: "/home/me" } },
+    { name: "space.new", args: { machine: "macos", folder: "/Users/me" } },
+    { name: "space.new", args: { machine: "macos", folder: "/Users/me" } },
+    { name: "space.new", args: { machine: "gone" } },
   ]);
+  // The remote home is asked once.
+  assert.equal(h.calls.filter((c) => c.options.on === "macos").length, 1);
 });
