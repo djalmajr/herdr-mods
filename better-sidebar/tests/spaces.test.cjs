@@ -614,3 +614,17 @@ test("spaces publish each space's main space for the agents block", () => {
   );
   assert.equal(parents.plain, undefined, "not a repository");
 });
+
+test("a machine's + opens the space on that machine, whichever space is focused", () => {
+  const h = harness();
+  const stop = { stop_propagation() {} };
+  h.mod.machineAddButton(null, h.colors).handlers.click(stop, h.cx);
+  h.mod.machineAddButton("macos", h.colors).handlers.click(stop, h.cx);
+  h.mod.newSpaceRow(null, h.colors, false).handlers.click(stop, h.cx);
+  // "" names this computer; without it Herdr uses the focused space's machine.
+  assert.deepEqual(JSON.parse(JSON.stringify(h.commands)), [
+    { name: "space.new", args: { machine: "" } },
+    { name: "space.new", args: { machine: "macos" } },
+    { name: "space.new", args: { machine: "" } },
+  ]);
+});
